@@ -20,19 +20,21 @@ class User(object):
         else:
             return False
 
-    def read_book(self, book, rating='None'):
-        if rating == 'None':
+    def read_book(self, book, rating=None):
+        if rating == None:
             self.books[book] = rating
-        elif rating != 'None':
-            self.books[book] = int(rating)
+        elif rating != None:
+            self.books[book] = rating
 
     def get_average_rating(self):
-        value_total = 0
+        ratings_total = 0
+        rated_indexes = 0
         for rating in self.books.values():
-            if rating != 'None':
-                value_total += rating
-        if value_total != 0:
-            return value_total/len(self.books)
+            if rating != None:
+                ratings_total += rating
+                rated_indexes += 1
+        if ratings_total != 0:
+            return ratings_total/rated_indexes
         else:
             return 0
             
@@ -72,7 +74,10 @@ class Book(object):
         rating_total = 0
         for rating in self.ratings:
             rating_total += rating
-        return rating_total/len(self.ratings)
+        if rating_total != 0:
+            return rating_total/len(self.ratings)
+        else:
+            return 0
 
     def __repr__(self):
         return "{book} with ISBN No. {isbn}".format(book=self.title, isbn=self.isbn)
@@ -110,7 +115,7 @@ class TomeRater():
         self.books = {}
         self.isbn = []
 
-     def __repr__(self):
+    def __repr__(self):
         print('\n')
         print("List of all the users in TomeRater:\n")
         for user in self.users.values():
@@ -128,45 +133,48 @@ class TomeRater():
         return self.users == other.users and self.books == other.books
 
     def isbn_check(self, isbn):
-        bool = False
-        for existing_isbn in self.isbn:
-            if isbn == existing_isbn:
-                bool = True
-                break
-        return bool
+        if isbn in self.isbn:
+            return True
+        else:
+            return False
 
     def create_book(self, title, isbn):
-        if not self.isbn_check(isbn):
+        if self.isbn_check(isbn):
+            return "There is already an existing book with this ISBN number!  Please ensure that the ISBN number is uique!"
+        else:
             new_book = Book(title, isbn)
             self.isbn.append(isbn)
             return new_book
-        else:
-            return "There is already an existing book with this ISBN number!  Please ensure that the ISBN number is uique!"
 
     def create_novel(self, title, author, isbn):
-        new_fiction = Fiction(title, author, isbn)
-        return new_fiction
+        if self.isbn_check(isbn):
+            return "There is already an existing book with this ISBN number!  Please ensure that the ISBN number is uique!"
+        else:
+            new_fiction = Fiction(title, author, isbn)
+            return new_fiction
 
     def create_non_fiction(self, title, subject, level, isbn):
-        new_non_fiction = Non_Fiction(title, subject, level, isbn)
+        if self.isbn_check(isbn):
+            return "There is already an existing book with this ISBN number!  Please ensure that the ISBN number is uique!"
+        else:
+            new_non_fiction = Non_Fiction(title, subject, level, isbn)
         return new_non_fiction
     
-    def add_book_to_user(self, book, email, rating = "None"):
+    def add_book_to_user(self, book, email, rating = None):
         user_occurrence = 0
         for user_email, user in self.users.items():
-            if user_email == email and rating != "None":
+            if user_email == email and rating != None:
                 user.read_book(book, rating)
                 book.add_rating(rating)
                 user_occurrence += 1
-            elif user_email == email and rating == "None":
+            elif user_email == email and rating == None:
                 user.read_book(book)
                 user_occurrence += 1
 
             book_occurrence = 0
-            for book_item in self.books.keys():
-                if book == book_item:
-                    self.books[book_item] += 1
-                    book_occurrence += 1
+            if book in self.books.keys():
+                self.books[book] += 1
+                book_occurrence += 1
             if book_occurrence == 0:
                 self.books[book] = 1
         
@@ -198,13 +206,13 @@ class TomeRater():
                 break
         return bool
 
-    def add_user(self, name, email, user_books = 'None'):
+    def add_user(self, name, email, user_books = None):
         if not self.email_check(email):
             return "Please provide a valid email address!"
         if not self.user_check(email):
             new_user = User(name, email)
             self.users[new_user.email] = new_user
-            if user_books != 'None':
+            if user_books != None:
                 for book in user_books:
                     self.add_book_to_user(book, new_user.email)
         else:
